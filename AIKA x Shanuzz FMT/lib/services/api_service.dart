@@ -4,9 +4,9 @@ import '../models/raw_table_entry.dart';
 import '../models/user.dart';
 
 class ApiService {
-  // Replace with your actual Google Apps Script web app URL
+  // Use Netlify Function proxy for CORS support
   static const String _baseUrl =
-      'https://script.google.com/macros/s/AKfycbwkkNNoLSvazoc_7z6M5-3MGh53Kb1GgavTlvnpg1RSpgBPrrkNlt721aX1sTPhW7zbCg/exec';
+      '/.netlify/functions/apps-script-proxy';
 
   // Raw Table Operations
   Future<List<RawTableEntry>> getRawTableEntries() async {
