@@ -201,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  NumberFormat.currency(symbol: '\$').format(_totalAmount),
+                  NumberFormat.currency(symbol: '₹', locale: 'en_IN').format(_totalAmount),
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -248,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                                 trailing: Text(
-                                  NumberFormat.currency(symbol: '\$')
+                                  NumberFormat.currency(symbol: '₹', locale: 'en_IN')
                                       .format(entry.amount),
                                   style: const TextStyle(
                                     fontSize: 16,

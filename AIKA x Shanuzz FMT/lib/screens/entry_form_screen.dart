@@ -271,7 +271,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Amount',
                   border: OutlineInputBorder(),
-                  prefixText: '\$ ',
+                  prefixText: '₹ ',
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
