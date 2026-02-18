@@ -7,17 +7,12 @@
   "background_color": "#F5F5F5",
   "theme_color": "#F9A825",
   "orientation": "portrait-primary",
+  "enctype": "application/x-www-form-urlencoded",
   "icons": [
     {
-      "src": "icons/Icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
-    },
-    {
-      "src": "icons/Icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "maskable any"
     }
   ],
