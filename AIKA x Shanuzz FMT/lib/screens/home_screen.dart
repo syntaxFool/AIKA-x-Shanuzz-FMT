@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:js' as js;
+import 'dart:html' as html;
 import '../models/raw_table_entry.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   contentPadding: EdgeInsets.zero,
                   onTap: () {
                     Navigator.pop(context);
-                    js.context.callMethod('location.reload');
+                    html.window.location.reload();
                   },
                 ),
               ),
