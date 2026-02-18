@@ -80,6 +80,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return _filteredEntries.fold(0.0, (sum, entry) => sum + entry.amount);
   }
 
+  String _formatDate(String dateString) {
+    try {
+      // Parse ISO date string (e.g., "2026-01-31T18:30:00.000Z")
+      final dateTime = DateTime.parse(dateString);
+      final format = DateFormat('dd MMM yyyy');
+      return format.format(dateTime);
+    } catch (e) {
+      // If parsing fails, return just the date part
+      return dateString.split('T')[0];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final uniqueMonths = _entries.map((e) => e.month).toSet().toList()..sort();
@@ -249,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('${entry.date} - ${entry.month}'),
+                                    Text(_formatDate(entry.date)),
                                     Text(
                                       entry.modeOfPayment,
                                       style: TextStyle(
