@@ -6,6 +6,11 @@ const SPREADSHEET_ID = '1e2Zt5EsUvdAXzlHigNwsT8EmytJXV7mXwuP1vY-378Q';
 const RAW_TABLE_SHEET_NAME = 'rawtable';
 const USER_SHEET_NAME = 'user';
 
+// Handle OPTIONS preflight requests for CORS
+function doOptions(e) {
+  return createResponse(true, 'OK');
+}
+
 // Main entry point for GET requests
 function doGet(e) {
   try {
@@ -53,7 +58,7 @@ function doPost(e) {
   }
 }
 
-// Helper function to create JSON response
+// Helper function to create JSON response with CORS headers
 function createResponse(success, data, message = '') {
   const response = {
     success: success,
@@ -63,7 +68,11 @@ function createResponse(success, data, message = '') {
   
   return ContentService
     .createTextOutput(JSON.stringify(response))
-    .setMimeType(ContentService.MimeType.JSON);
+    .setMimeType(ContentService.MimeType.JSON)
+    .addHeader('Access-Control-Allow-Origin', '*')
+    .addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+    .addHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    .addHeader('Access-Control-Max-Age', '3600');
 }
 
 // Get spreadsheet

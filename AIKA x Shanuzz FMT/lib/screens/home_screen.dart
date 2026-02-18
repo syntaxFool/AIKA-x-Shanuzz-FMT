@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:js' as js;
 import '../models/raw_table_entry.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
@@ -107,6 +108,17 @@ class _HomeScreenState extends State<HomeScreen> {
           PopupMenuButton(
             icon: const Icon(Icons.more_vert),
             itemBuilder: (context) => [
+              PopupMenuItem(
+                child: ListTile(
+                  leading: const Icon(Icons.refresh_sharp),
+                  title: const Text('Hard Refresh'),
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () {
+                    Navigator.pop(context);
+                    js.context.callMethod('location.reload');
+                  },
+                ),
+              ),
               PopupMenuItem(
                 child: ListTile(
                   leading: const Icon(Icons.logout),
