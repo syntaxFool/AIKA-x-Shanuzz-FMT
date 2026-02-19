@@ -264,15 +264,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
-                              Icons.account_balance_wallet,
+                              Icons.attach_money,
                               color: Theme.of(context).colorScheme.primary,
-                              size: 20,
+                              size: 22,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -295,7 +296,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.receipt_long, size: 14),
+                            Icon(
+                              Icons.list_alt,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '${_filteredEntries.length}',
@@ -332,23 +337,35 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: DropdownButton<String?>(
                       value: _filterMonth,
                       hint: Row(
-                        children: const [
-                          Icon(Icons.calendar_month, size: 16),
-                          SizedBox(width: 8),
-                          Text('All Months'),
+                        children: [
+                          Icon(
+                            Icons.filter_list,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('All Months'),
                         ],
                       ),
                       isExpanded: true,
                       underline: const SizedBox(),
-                      icon: const Icon(Icons.arrow_drop_down, size: 24),
+                      icon: Icon(
+                        Icons.arrow_drop_down,
+                        size: 24,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                       items: [
-                        const DropdownMenuItem<String?>(
+                        DropdownMenuItem<String?>(
                           value: null,
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_month, size: 16),
-                              SizedBox(width: 8),
-                              Text('All Months'),
+                              Icon(
+                                Icons.filter_list,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('All Months'),
                             ],
                           ),
                         ),
@@ -357,7 +374,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             value: month,
                             child: Row(
                               children: [
-                                const Icon(Icons.calendar_today, size: 16),
+                                Icon(
+                                  Icons.date_range,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                ),
                                 const SizedBox(width: 8),
                                 Text(month),
                               ],
