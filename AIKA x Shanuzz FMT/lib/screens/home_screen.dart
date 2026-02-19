@@ -141,17 +141,17 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem<String>(
+              const PopupMenuItem<String>(
                 value: 'sheet',
                 child: Row(
                   children: [
                     Icon(
                       Icons.table_chart,
                       size: 20,
-                      color: Colors.green[700],
+                      color: Color(0xFF388E3C),
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
+                    SizedBox(width: 12),
+                    Text(
                       'Sheet',
                       style: TextStyle(fontSize: 15),
                     ),
@@ -159,17 +159,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const PopupMenuDivider(),
-              PopupMenuItem<String>(
+              const PopupMenuItem<String>(
                 value: 'refresh',
                 child: Row(
                   children: [
                     Icon(
                       Icons.refresh_sharp,
                       size: 20,
-                      color: Colors.blue[700],
+                      color: Color(0xFF1976D2),
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
+                    SizedBox(width: 12),
+                    Text(
                       'Hard Refresh',
                       style: TextStyle(fontSize: 15),
                     ),
@@ -177,17 +177,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const PopupMenuDivider(),
-              PopupMenuItem<String>(
+              const PopupMenuItem<String>(
                 value: 'logout',
                 child: Row(
                   children: [
                     Icon(
                       Icons.logout,
                       size: 20,
-                      color: Colors.red[700],
+                      color: Color(0xFFD32F2F),
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
+                    SizedBox(width: 12),
+                    Text(
                       'Logout',
                       style: TextStyle(fontSize: 15),
                     ),
