@@ -164,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.refresh_sharp,
+                      Icons.sync,
                       size: 20,
                       color: Color(0xFF1976D2),
                     ),
