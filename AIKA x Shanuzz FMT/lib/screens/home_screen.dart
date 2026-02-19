@@ -92,6 +92,22 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  String _formatMonth(String monthString) {
+    try {
+      // If it's an ISO date string, parse and format as "MMMM yyyy"
+      if (monthString.contains('T') || monthString.contains('-')) {
+        final dateTime = DateTime.parse(monthString);
+        final format = DateFormat('MMMM yyyy');
+        return format.format(dateTime);
+      }
+      // Otherwise return as-is (already formatted)
+      return monthString;
+    } catch (e) {
+      // If parsing fails, return as-is
+      return monthString;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final uniqueMonths = _entries.map((e) => e.month).toSet().toList()..sort();
@@ -336,6 +352,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       isExpanded: true,
                       underline: const SizedBox(),
                       icon: const Text('▼', style: TextStyle(fontSize: 12)),
+                      selectedItemBuilder: (context) {
+                        return [
+                          const Row(
+                            children: [
+                              Text('📅', style: TextStyle(fontSize: 14)),
+                              SizedBox(width: 8),
+                              Text('All Months'),
+                            ],
+                          ),
+                          ...uniqueMonths.map((month) {
+                            return Row(
+                              children: [
+                                const Text('📆', style: TextStyle(fontSize: 14)),
+                                const SizedBox(width: 8),
+                                Text(_formatMonth(month)),
+                              ],
+                            );
+                          }),
+                        ];
+                      },
                       items: [
                         const DropdownMenuItem<String?>(
                           value: null,
@@ -354,7 +390,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 const Text('📆', style: TextStyle(fontSize: 14)),
                                 const SizedBox(width: 8),
-                                Text(month),
+                                Text(_formatMonth(month)),
                               ],
                             ),
                           );
