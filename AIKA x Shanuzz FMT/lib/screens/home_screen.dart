@@ -117,29 +117,81 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _loadEntries,
             tooltip: 'Refresh',
           ),
-          PopupMenuButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 8,
+            offset: const Offset(0, 50),
+            onSelected: (value) {
+              switch (value) {
+                case 'sheet':
+                  html.window.open(
+                    'https://docs.google.com/spreadsheets/d/1e2Zt5EsUvdAXzlHigNwsT8EmytJXV7mXwuP1vY-378Q/edit?usp=sharing',
+                    '_blank',
+                  );
+                  break;
+                case 'refresh':
+                  html.window.location.reload();
+                  break;
+                case 'logout':
+                  _logout();
+                  break;
+              }
+            },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                child: ListTile(
-                  leading: const Icon(Icons.refresh_sharp),
-                  title: const Text('Hard Refresh'),
-                  contentPadding: EdgeInsets.zero,
-                  onTap: () {
-                    Navigator.pop(context);
-                    html.window.location.reload();
-                  },
+              PopupMenuItem<String>(
+                value: 'sheet',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.table_chart,
+                      size: 20,
+                      color: Colors.green[700],
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Sheet',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                  ],
                 ),
               ),
-              PopupMenuItem(
-                child: ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text('Logout'),
-                  contentPadding: EdgeInsets.zero,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _logout();
-                  },
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'refresh',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.refresh_sharp,
+                      size: 20,
+                      color: Colors.blue[700],
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Hard Refresh',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.logout,
+                      size: 20,
+                      color: Colors.red[700],
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Logout',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                  ],
                 ),
               ),
             ],
