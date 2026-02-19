@@ -261,23 +261,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
+                      const Row(
                         children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.attach_money,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 22,
-                            ),
+                          Text(
+                            '💰',
+                            style: TextStyle(fontSize: 24),
                           ),
-                          const SizedBox(width: 12),
-                          const Text(
+                          SizedBox(width: 12),
+                          Text(
                             'Total Amount',
                             style: TextStyle(
                               fontSize: 16,
@@ -296,10 +287,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.list_alt,
-                              size: 14,
-                              color: Theme.of(context).colorScheme.onSurface,
+                            const Text(
+                              '📋',
+                              style: TextStyle(fontSize: 12),
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -336,36 +326,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: DropdownButton<String?>(
                       value: _filterMonth,
-                      hint: Row(
+                      hint: const Row(
                         children: [
-                          Icon(
-                            Icons.filter_list,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('All Months'),
+                          Text('📅', style: TextStyle(fontSize: 14)),
+                          SizedBox(width: 8),
+                          Text('All Months'),
                         ],
                       ),
                       isExpanded: true,
                       underline: const SizedBox(),
-                      icon: Icon(
-                        Icons.arrow_drop_down,
-                        size: 24,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
+                      icon: const Text('▼', style: TextStyle(fontSize: 12)),
                       items: [
-                        DropdownMenuItem<String?>(
+                        const DropdownMenuItem<String?>(
                           value: null,
                           child: Row(
                             children: [
-                              Icon(
-                                Icons.filter_list,
-                                size: 16,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                              ),
-                              const SizedBox(width: 8),
-                              const Text('All Months'),
+                              Text('📅', style: TextStyle(fontSize: 14)),
+                              SizedBox(width: 8),
+                              Text('All Months'),
                             ],
                           ),
                         ),
@@ -374,11 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             value: month,
                             child: Row(
                               children: [
-                                Icon(
-                                  Icons.date_range,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                ),
+                                const Text('📆', style: TextStyle(fontSize: 14)),
                                 const SizedBox(width: 8),
                                 Text(month),
                               ],
