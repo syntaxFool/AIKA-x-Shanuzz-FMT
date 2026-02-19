@@ -164,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.autorenew,
+                      Icons.refresh,
                       size: 20,
                       color: Theme.of(context).colorScheme.primary,
                     ),
