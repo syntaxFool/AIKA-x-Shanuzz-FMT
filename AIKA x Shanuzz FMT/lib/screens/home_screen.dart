@@ -234,36 +234,134 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           // Summary Card
           Container(
-            padding: const EdgeInsets.all(16),
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primaryContainer,
+                  Theme.of(context).colorScheme.secondaryContainer,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Total Amount',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.account_balance_wallet,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Total Amount',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.receipt_long, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${_filteredEntries.length}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    NumberFormat.currency(symbol: '₹', locale: 'en_IN').format(_totalAmount),
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
                       ),
                     ),
-                    DropdownButton<String?>(
+                    child: DropdownButton<String?>(
                       value: _filterMonth,
-                      hint: const Text('All Months'),
+                      hint: Row(
+                        children: const [
+                          Icon(Icons.calendar_month, size: 16),
+                          SizedBox(width: 8),
+                          Text('All Months'),
+                        ],
+                      ),
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      icon: const Icon(Icons.arrow_drop_down, size: 24),
                       items: [
                         const DropdownMenuItem<String?>(
                           value: null,
-                          child: Text('All Months'),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_month, size: 16),
+                              SizedBox(width: 8),
+                              Text('All Months'),
+                            ],
+                          ),
                         ),
                         ...uniqueMonths.map((month) {
                           return DropdownMenuItem<String?>(
                             value: month,
-                            child: Text(month),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today, size: 16),
+                                const SizedBox(width: 8),
+                                Text(month),
+                              ],
+                            ),
                           );
                         }),
                       ],
@@ -273,17 +371,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         });
                       },
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  NumberFormat.currency(symbol: '₹', locale: 'en_IN').format(_totalAmount),
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           // Entries List
