@@ -159,17 +159,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'refresh',
                 child: Row(
                   children: [
                     Icon(
-                      Icons.sync,
+                      Icons.autorenew,
                       size: 20,
-                      color: Color(0xFF1976D2),
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                    SizedBox(width: 12),
-                    Text(
+                    const SizedBox(width: 12),
+                    const Text(
                       'Hard Refresh',
                       style: TextStyle(fontSize: 15),
                     ),
