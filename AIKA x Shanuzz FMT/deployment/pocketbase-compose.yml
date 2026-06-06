@@ -1,0 +1,31 @@
+# PocketBase deployment for Coolify
+# Deploy as a standalone service on the Coolify server
+# Traefik routes pb.aika-shuz.fyi → this container
+
+version: '3.8'
+
+services:
+  pocketbase:
+    image: pocketbase/pocketbase:latest
+    container_name: fmt-pocketbase
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8091:8090"
+    volumes:
+      # Persist data
+      - fmt_pb_data:/pb_data
+      # Auto-generated migration files (copy from local noc/pb_migrations/)
+      - ./pb_migrations:/pb_migrations
+    environment:
+      # Traefik handles SSL; PocketBase just serves HTTP
+      - PB_ADMIN_EMAIL=admin@fmt.aika-shuz.fyi
+    # Health check
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:8090/api/health || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  fmt_pb_data:
