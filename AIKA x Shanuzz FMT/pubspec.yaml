@@ -1,7 +1,7 @@
 name: aika_shanuzz_fmt
 description: A PWA tool for managing FMT data with Google Sheets integration
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
