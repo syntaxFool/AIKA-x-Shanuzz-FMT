@@ -53,3 +53,5 @@ local.properties
 # Environment files
 .env
 *.env
+noc/pocketbase
+noc/pb_data/
