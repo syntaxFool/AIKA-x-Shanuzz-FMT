@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'services/pocketbase_service.dart';
+import 'widgets/moon_phase_loader.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -110,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const CircularProgressIndicator(),
+            const MoonPhaseLoader(),
           ],
         ),
       ),

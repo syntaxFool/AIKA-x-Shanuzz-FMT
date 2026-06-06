@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
 import '../models/user.dart';
 import '../services/pocketbase_service.dart';
+import '../widgets/moon_phase_loader.dart';
 
 class UserManagementScreen extends StatefulWidget {
   final PocketBaseService pbService;
@@ -276,7 +277,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: MoonPhaseLoader())
           : _users.isEmpty
               ? const Center(
                   child: Text('No users found'),

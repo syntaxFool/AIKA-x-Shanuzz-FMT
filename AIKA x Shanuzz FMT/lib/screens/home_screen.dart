@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/raw_table_entry.dart';
 import '../services/pocketbase_service.dart';
 import '../services/csv_service.dart';
+import '../widgets/moon_phase_loader.dart';
 import 'entry_form_screen.dart';
 import 'user_management_screen.dart';
 import 'login_screen.dart';
@@ -896,7 +897,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Entries List
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: MoonPhaseLoader())
                 : _filteredEntries.isEmpty
                     ? Center(
                         child: Column(

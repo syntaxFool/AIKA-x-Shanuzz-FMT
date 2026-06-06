@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:pocketbase/pocketbase.dart';
 import '../models/raw_table_entry.dart';
 import '../services/pocketbase_service.dart';
+import '../widgets/moon_phase_loader.dart';
 
 class EntryFormScreen extends StatefulWidget {
   final PocketBaseService pbService;
@@ -368,7 +369,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: MoonPhaseButton(),
                         )
                       : Text(
                           isEditing ? 'Update Entry' : 'Add Entry',

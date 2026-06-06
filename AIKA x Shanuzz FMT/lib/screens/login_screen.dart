@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pocketbase/pocketbase.dart';
 import '../services/pocketbase_service.dart';
+import '../widgets/moon_phase_loader.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -150,8 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2),
+                                child: MoonPhaseButton(),
                               )
                             : const Text(
                                 'Login',
