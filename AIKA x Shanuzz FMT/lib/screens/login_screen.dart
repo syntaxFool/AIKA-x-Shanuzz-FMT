@@ -17,14 +17,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final _formKey = GlobalKey<FormState>();
   final _accessKeyController = TextEditingController();
-  final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
     _accessKeyController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
@@ -34,14 +31,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Build full email from access key
-      final email =
-          '${_accessKeyController.text.trim()}$_emailDomain';
+      final key = _accessKeyController.text.trim();
+      // Access key doubles as both email username and password
+      final email = '$key$_emailDomain';
+      final password = key;
 
-      await widget.pbService.login(
-        email,
-        _passwordController.text,
-      );
+      await widget.pbService.login(email, password);
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -50,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     } on ClientException catch (e) {
-      final message = e.response['message'] ?? 'Invalid credentials';
+      final message = e.response['message'] ?? 'Invalid access key';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -118,33 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your access key';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
                     }
                     return null;
                   },
