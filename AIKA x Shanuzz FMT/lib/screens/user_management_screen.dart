@@ -53,6 +53,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       text: user?.reffid ?? 'USER${DateTime.now().millisecondsSinceEpoch}',
     );
     final passwordController = TextEditingController();
+    String selectedRole = 'viewer';
 
     final result = await showDialog<bool>(
       context: context,
@@ -104,6 +105,23 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedRole,
+                  decoration: const InputDecoration(
+                    labelText: 'Role',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                        value: 'admin', child: Text('Admin')),
+                    DropdownMenuItem(
+                        value: 'viewer', child: Text('Viewer')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) selectedRole = v;
+                  },
+                ),
                 if (user == null) ...[
                   const SizedBox(height: 16),
                   TextFormField(
@@ -147,6 +165,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     'passwordConfirm': passwordController.text,
                     'name': nameController.text.trim(),
                     'reffid': reffidController.text.trim(),
+                    'role': selectedRole,
                   });
                   success = true;
                 } else {
@@ -155,6 +174,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     'name': nameController.text.trim(),
                     'reffid': reffidController.text.trim(),
                     'email': emailController.text.trim(),
+                    'role': selectedRole,
                   };
                   if (user.pbId != null) {
                     await widget.pbService.updateUser(user.pbId!, body);

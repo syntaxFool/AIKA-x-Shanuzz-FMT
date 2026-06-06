@@ -543,7 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Search Bar
           Container(
             margin:
-            const EdgeInsets.only(left: 16, right: 8, top: 8),
+            const EdgeInsets.only(left: 12, right: 4, top: 6),
             child: Row(
               children: [
                 Expanded(
@@ -696,7 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           // Summary Card
           Container(
-            margin: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -716,7 +716,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -898,8 +898,42 @@ class _HomeScreenState extends State<HomeScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredEntries.isEmpty
-                    ? const Center(
-                        child: Text('No entries found'),
+                : _filteredEntries.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _searchText.isNotEmpty
+                                  ? Icons.search_off
+                                  : Icons.receipt_long,
+                              size: 64,
+                              color: Colors.grey[300],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchText.isNotEmpty
+                                  ? 'No entries match your search'
+                                  : 'No entries yet',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _searchText.isNotEmpty
+                                  ? 'Try a different search term'
+                                  : widget.pbService.isAdmin
+                                      ? 'Tap + to add your first entry'
+                                      : 'Check back later',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[400],
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     : RefreshIndicator(
                         onRefresh: _loadEntries,
@@ -909,8 +943,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             final entry = _filteredEntries[index];
                             return Card(
                               margin: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                                horizontal: 12,
+                                vertical: 5,
                               ),
                               child: ListTile(
                                 leading: CircleAvatar(

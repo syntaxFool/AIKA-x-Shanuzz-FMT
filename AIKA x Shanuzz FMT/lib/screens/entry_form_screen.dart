@@ -250,7 +250,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _amountController,
                 decoration: const InputDecoration(
@@ -258,6 +258,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                   border: OutlineInputBorder(),
                   prefixText: '₹ ',
                 ),
+                style: const TextStyle(fontSize: 18),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
@@ -270,7 +271,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: _modeOfPaymentController.text.isEmpty
                     ? null
@@ -304,7 +305,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Autocomplete<String>(
                 initialValue:
                     TextEditingValue(text: _rowDescController.text),
@@ -347,7 +348,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _rowNoteController,
                 decoration: const InputDecoration(
