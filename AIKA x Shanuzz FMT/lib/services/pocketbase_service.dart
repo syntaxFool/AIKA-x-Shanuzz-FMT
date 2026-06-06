@@ -35,6 +35,10 @@ class PocketBaseService {
   /// Current authenticated user's PocketBase record ID.
   String? get userId => _pb.authStore.record?.id;
 
+  /// Whether the current user has admin role.
+  bool get isAdmin =>
+      _pb.authStore.record?.getStringValue('role') == 'admin';
+
   /// Raw auth store (for advanced use — e.g. checking expiry).
   AuthStore get authStore => _pb.authStore;
 

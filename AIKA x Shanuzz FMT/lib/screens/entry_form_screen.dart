@@ -217,7 +217,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEditing ? 'Edit Entry' : 'Add Entry'),
-        actions: isEditing
+        actions: isEditing && widget.pbService.isAdmin
             ? [
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
@@ -357,22 +357,44 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _saveEntry,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        isEditing ? 'Update Entry' : 'Add Entry',
-                        style: const TextStyle(fontSize: 16),
+              if (widget.pbService.isAdmin || !isEditing)
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _saveEntry,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          isEditing ? 'Update Entry' : 'Add Entry',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange[200]!),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.visibility, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Read-only view. Contact an admin to make changes.',
+                          style: TextStyle(color: Colors.orange),
+                        ),
                       ),
-              ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),

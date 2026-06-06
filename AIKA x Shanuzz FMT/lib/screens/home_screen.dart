@@ -102,19 +102,20 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('FMT Dashboard'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.people),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      UserManagementScreen(pbService: widget.pbService),
-                ),
-              );
-            },
-            tooltip: 'User Management',
-          ),
+          if (widget.pbService.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.people),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        UserManagementScreen(pbService: widget.pbService),
+                  ),
+                );
+              },
+              tooltip: 'User Management',
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadEntries,
@@ -446,21 +447,23 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                onTap: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          EntryFormScreen(
-                                        pbService: widget.pbService,
-                                        entry: entry,
-                                      ),
-                                    ),
-                                  );
-                                  if (result == true) {
-                                    _loadEntries();
-                                  }
-                                },
+                                onTap: widget.pbService.isAdmin
+                                    ? () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                EntryFormScreen(
+                                              pbService: widget.pbService,
+                                              entry: entry,
+                                            ),
+                                          ),
+                                        );
+                                        if (result == true) {
+                                          _loadEntries();
+                                        }
+                                      }
+                                    : null,
                               ),
                             );
                           },
@@ -469,22 +472,24 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  EntryFormScreen(pbService: widget.pbService),
-            ),
-          );
-          if (result == true) {
-            _loadEntries();
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Entry'),
-      ),
+      floatingActionButton: widget.pbService.isAdmin
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EntryFormScreen(
+                        pbService: widget.pbService),
+                  ),
+                );
+                if (result == true) {
+                  _loadEntries();
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Add Entry'),
+            )
+          : null,
     );
   }
 }
