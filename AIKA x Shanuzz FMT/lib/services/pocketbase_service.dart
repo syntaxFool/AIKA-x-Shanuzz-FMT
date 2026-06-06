@@ -10,8 +10,15 @@ class PocketBaseService {
   late final PocketBase _pb;
   bool _initialized = false;
 
-  /// Local dev URL; override via [initialize] for production.
-  static const String _defaultUrl = 'http://127.0.0.1:8090';
+  /// Production PocketBase URL (used in release builds).
+  static const String _productionUrl = 'https://pb.aika-shuz.fyi';
+
+  /// Local development PocketBase URL.
+  static const String _devUrl = 'http://127.0.0.1:8090';
+
+  /// Default URL switches based on build mode.
+  static String get _defaultUrl =>
+      kReleaseMode ? _productionUrl : _devUrl;
 
   /// URL of the PocketBase server (set after initialize).
   String get url => _initialized ? _pb.baseUrl : _defaultUrl;
