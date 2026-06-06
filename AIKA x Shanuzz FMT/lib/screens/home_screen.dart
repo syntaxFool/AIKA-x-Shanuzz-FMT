@@ -484,8 +484,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              PopupMenuItem<String>(
-                value: 'import_csv',
+              if (widget.pbService.isAdmin)
+                PopupMenuItem<String>(
+                  value: 'import_csv',
                 child: Row(
                   children: [
                     Icon(
@@ -939,23 +940,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                onTap: widget.pbService.isAdmin
-                                    ? () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                EntryFormScreen(
-                                              pbService: widget.pbService,
-                                              entry: entry,
-                                            ),
-                                          ),
-                                        );
-                                        if (result == true) {
-                                          _loadEntries();
-                                        }
-                                      }
-                                    : null,
+                                onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            EntryFormScreen(
+                                          pbService: widget.pbService,
+                                          entry: entry,
+                                        ),
+                                      ),
+                                    );
+                                    if (result == true) {
+                                      _loadEntries();
+                                    }
+                                  },
                               ),
                             );
                           },
