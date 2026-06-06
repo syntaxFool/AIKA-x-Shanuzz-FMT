@@ -32,6 +32,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadEntries();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadEntries() async {
     setState(() => _isLoading = true);
 
@@ -164,12 +170,153 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<RawTableEntry> get _filteredEntries {
-    if (_filterMonth == null) return _entries;
-    return _entries.where((e) => e.month == _filterMonth).toList();
+    var result = _filterMonth == null
+        ? List<RawTableEntry>.from(_entries)
+        : _entries.where((e) => e.month == _filterMonth).toList();
+
+    // Search filter
+    if (_searchText.isNotEmpty) {
+      result = result
+          .where((e) =>
+              e.rowDesc.toLowerCase().contains(_searchText.toLowerCase()))
+          .toList();
+    }
+
+    // Date range filter
+    if (_dateFrom != null) {
+      try {
+        result = result
+            .where((e) => DateTime.parse(e.date)
+                .isAfter(_dateFrom!.subtract(const Duration(days: 1))))
+            .toList();
+      } catch (_) {}
+    }
+    if (_dateTo != null) {
+      try {
+        result = result
+            .where((e) => DateTime.parse(e.date)
+                .isBefore(_dateTo!.add(const Duration(days: 1))))
+            .toList();
+      } catch (_) {}
+    }
+
+    // Amount range filter
+    if (_amountMin != null) {
+      result = result.where((e) => e.amount >= _amountMin!).toList();
+    }
+    if (_amountMax != null) {
+      result = result.where((e) => e.amount <= _amountMax!).toList();
+    }
+
+    // Sort
+    if (_sortField != null) {
+      result.sort((a, b) {
+        int cmp;
+        switch (_sortField!) {
+          case 'date':
+            cmp = a.date.compareTo(b.date);
+          case 'amount':
+            cmp = a.amount.compareTo(b.amount);
+          case 'description':
+            cmp = a.rowDesc.compareTo(b.rowDesc);
+          default:
+            cmp = 0;
+        }
+        return _sortAscending ? cmp : -cmp;
+      });
+    }
+
+    return result;
   }
 
   double get _totalAmount {
     return _filteredEntries.fold(0.0, (sum, entry) => sum + entry.amount);
+  }
+
+  Map<String, double> get _paymentModeBreakdown {
+    final breakdown = <String, double>{};
+    for (final entry in _filteredEntries) {
+      breakdown[entry.modeOfPayment] =
+          (breakdown[entry.modeOfPayment] ?? 0) + entry.amount;
+    }
+    return breakdown;
+  }
+
+  bool get _hasActiveFilters =>
+      _filterMonth != null ||
+      _searchText.isNotEmpty ||
+      _dateFrom != null ||
+      _dateTo != null ||
+      _amountMin != null ||
+      _amountMax != null;
+
+  void _clearFilters() {
+    setState(() {
+      _searchController.clear();
+      _searchText = '';
+      _filterMonth = null;
+      _dateFrom = null;
+      _dateTo = null;
+      _amountMin = null;
+      _amountMax = null;
+      _sortField = null;
+      _sortAscending = true;
+    });
+  }
+
+  Widget _sortHeader(String label, String field) {
+    final isActive = _sortField == field;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (_sortField == field) {
+            _sortAscending = !_sortAscending;
+          } else {
+            _sortField = field;
+            _sortAscending = true;
+          }
+        });
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: isActive
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey[600],
+              ),
+            ),
+            if (isActive)
+              Icon(
+                _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 12,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modeIcon(String mode) {
+    switch (mode) {
+      case 'Cash':
+        return const Icon(Icons.money, size: 16);
+      case 'Card':
+        return const Icon(Icons.credit_card, size: 16);
+      case 'UPI':
+        return const Icon(Icons.phone_android, size: 16);
+      case 'Bank Transfer':
+        return const Icon(Icons.account_balance, size: 16);
+      default:
+        return const Icon(Icons.receipt, size: 16);
+    }
   }
 
   String _formatDate(String dateString) {
@@ -379,6 +526,160 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+          // Search Bar
+          Container(
+            margin:
+            const EdgeInsets.only(left: 16, right: 8, top: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search descriptions...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _searchText.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchText = '');
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      filled: true,
+                      fillColor: Colors.white,
+                      isDense: true,
+                    ),
+                    onChanged: (value) =>
+                        setState(() => _searchText = value),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    _hasActiveFilters
+                        ? Icons.filter_list
+                        : Icons.filter_list_off,
+                    color: _hasActiveFilters
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                  onPressed: () =>
+                      setState(() => _showFilters = !_showFilters),
+                  tooltip: 'Toggle filters',
+                ),
+                if (_hasActiveFilters)
+                  IconButton(
+                    icon: const Icon(Icons.clear_all, size: 20),
+                    onPressed: _clearFilters,
+                    tooltip: 'Clear all filters',
+                  ),
+              ],
+            ),
+          ),
+          // Filters Panel
+          if (_showFilters)
+            Container(
+              margin:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Column(
+                children: [
+                  Row(children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.calendar_today, size: 16),
+                        label: Text(
+                          _dateFrom != null
+                              ? DateFormat('dd/MM/yyyy')
+                                  .format(_dateFrom!)
+                              : 'From date',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        onPressed: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate:
+                                _dateFrom ?? DateTime.now().subtract(const Duration(days: 30)),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          );
+                          if (picked != null) {
+                            setState(() => _dateFrom = picked);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.calendar_today, size: 16),
+                        label: Text(
+                          _dateTo != null
+                              ? DateFormat('dd/MM/yyyy').format(_dateTo!)
+                              : 'To date',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        onPressed: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate:
+                                _dateTo ?? DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          );
+                          if (picked != null) {
+                            setState(() => _dateTo = picked);
+                          }
+                        },
+                      ),
+                    ),
+                  ]),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Min ₹',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
+                        onChanged: (v) => setState(
+                            () => _amountMin = double.tryParse(v)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Max ₹',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
+                        onChanged: (v) => setState(
+                            () => _amountMax = double.tryParse(v)),
+                      ),
+                    ),
+                  ]),
+                ],
+              ),
+            ),
           // Summary Card
           Container(
             margin: const EdgeInsets.all(16),
@@ -542,6 +843,42 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          // Payment Mode Breakdown
+          if (_filteredEntries.isNotEmpty &&
+              _paymentModeBreakdown.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: _paymentModeBreakdown.entries
+                    .where((e) => e.value > 0)
+                    .map((e) => Chip(
+                          avatar: _modeIcon(e.key),
+                          label: Text(
+                            '${e.key}: ${NumberFormat.currency(symbol: '₹', locale: 'en_IN').format(e.value)}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ))
+                    .toList(),
+              ),
+            ),
+          // Sort Headers
+          if (_filteredEntries.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  _sortHeader('Date', 'date'),
+                  _sortHeader('Amount', 'amount'),
+                  const Spacer(),
+                  _sortHeader('Description', 'description'),
+                ],
+              ),
+            ),
           // Entries List
           Expanded(
             child: _isLoading
