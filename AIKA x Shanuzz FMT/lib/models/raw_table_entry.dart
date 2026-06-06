@@ -1,4 +1,7 @@
+import 'package:pocketbase/pocketbase.dart';
+
 class RawTableEntry {
+  final String? pbId; // PocketBase record ID (null for new entries)
   final String reffid;
   final String date;
   final String month;
@@ -12,6 +15,7 @@ class RawTableEntry {
   final String editUser;
 
   RawTableEntry({
+    this.pbId,
     required this.reffid,
     required this.date,
     required this.month,
@@ -25,6 +29,42 @@ class RawTableEntry {
     required this.editUser,
   });
 
+  /// Create from a PocketBase [RecordModel].
+  factory RawTableEntry.fromRecord(RecordModel record) {
+    return RawTableEntry(
+      pbId: record.id,
+      reffid: record.getStringValue('reffid'),
+      date: record.getStringValue('date'),
+      month: record.getStringValue('month'),
+      amount: record.getDoubleValue('amount'),
+      modeOfPayment: record.getStringValue('modeOfPayment'),
+      rowDesc: record.getStringValue('rowDesc'),
+      rowNote: record.getStringValue('rowNote'),
+      entryTimestamp: record.getStringValue('entryTimestamp'),
+      entryUser: record.getStringValue('entryUser'),
+      editTimestamp: record.getStringValue('editTimestamp'),
+      editUser: record.getStringValue('editUser'),
+    );
+  }
+
+  /// Convert to a body map for PocketBase create/update.
+  Map<String, dynamic> toRecordBody() {
+    return {
+      'reffid': reffid,
+      'date': date,
+      'month': month,
+      'amount': amount,
+      'modeOfPayment': modeOfPayment,
+      'rowDesc': rowDesc,
+      'rowNote': rowNote,
+      'entryTimestamp': entryTimestamp,
+      'entryUser': entryUser,
+      'editTimestamp': editTimestamp,
+      'editUser': editUser,
+    };
+  }
+
+  /// Legacy: create from a Google Sheets JSON row.
   factory RawTableEntry.fromJson(Map<String, dynamic> json) {
     return RawTableEntry(
       reffid: json['Reffid'] ?? '',
@@ -58,6 +98,7 @@ class RawTableEntry {
   }
 
   RawTableEntry copyWith({
+    String? pbId,
     String? reffid,
     String? date,
     String? month,
@@ -71,6 +112,7 @@ class RawTableEntry {
     String? editUser,
   }) {
     return RawTableEntry(
+      pbId: pbId ?? this.pbId,
       reffid: reffid ?? this.reffid,
       date: date ?? this.date,
       month: month ?? this.month,

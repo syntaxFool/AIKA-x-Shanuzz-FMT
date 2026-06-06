@@ -2,22 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/raw_table_entry.dart';
-import '../services/api_service.dart';
-import '../services/storage_service.dart';
+import '../services/pocketbase_service.dart';
 import 'entry_form_screen.dart';
 import 'user_management_screen.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final PocketBaseService pbService;
+
+  const HomeScreen({super.key, required this.pbService});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final ApiService _apiService = ApiService();
-  final StorageService _storageService = StorageService();
   List<RawTableEntry> _entries = [];
   bool _isLoading = false;
   String _userName = '';
@@ -26,26 +25,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserName();
+    _userName = widget.pbService.userName ?? 'User';
     _loadEntries();
   }
 
-  Future<void> _loadUserName() async {
-    final name = await _storageService.getUserName();
-    setState(() {
-      _userName = name ?? 'User';
-    });
-  }
-
   Future<void> _loadEntries() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final entries = await _apiService.getRawTableEntries();
+      final records = await widget.pbService.getEntries(month: _filterMonth);
+      if (!mounted) return;
       setState(() {
-        _entries = entries;
+        _entries = records.map((r) => RawTableEntry.fromRecord(r)).toList();
       });
     } catch (e) {
       if (mounted) {
@@ -57,17 +48,17 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _logout() async {
-    await _storageService.clearUserCredentials();
+    widget.pbService.logout();
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(pbService: widget.pbService),
+      ),
     );
   }
 
@@ -82,28 +73,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _formatDate(String dateString) {
     try {
-      // Parse ISO date string (e.g., "2026-01-31T18:30:00.000Z")
       final dateTime = DateTime.parse(dateString);
       final format = DateFormat('dd MMM yyyy');
       return format.format(dateTime);
     } catch (e) {
-      // If parsing fails, return just the date part
       return dateString.split('T')[0];
     }
   }
 
   String _formatMonth(String monthString) {
     try {
-      // If it's an ISO date string, parse and format as "MMMM yyyy"
       if (monthString.contains('T') || monthString.contains('-')) {
         final dateTime = DateTime.parse(monthString);
         final format = DateFormat('MMMM yyyy');
         return format.format(dateTime);
       }
-      // Otherwise return as-is (already formatted)
       return monthString;
     } catch (e) {
-      // If parsing fails, return as-is
       return monthString;
     }
   }
@@ -122,7 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const UserManagementScreen(),
+                  builder: (context) =>
+                      UserManagementScreen(pbService: widget.pbService),
                 ),
               );
             },
@@ -144,7 +131,8 @@ class _HomeScreenState extends State<HomeScreen> {
               switch (value) {
                 case 'sheet':
                   launchUrl(
-                    Uri.parse('https://docs.google.com/spreadsheets/d/1e2Zt5EsUvdAXzlHigNwsT8EmytJXV7mXwuP1vY-378Q/edit?usp=sharing'),
+                    Uri.parse(
+                        'https://docs.google.com/spreadsheets/d/1e2Zt5EsUvdAXzlHigNwsT8EmytJXV7mXwuP1vY-378Q/edit?usp=sharing'),
                     webOnlyWindowName: '_blank',
                   );
                   break;
@@ -295,7 +283,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(20),
@@ -322,7 +311,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    NumberFormat.currency(symbol: '₹', locale: 'en_IN').format(_totalAmount),
+                    NumberFormat.currency(symbol: '₹', locale: 'en_IN')
+                        .format(_totalAmount),
                     style: const TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
@@ -331,7 +321,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(8),
@@ -388,7 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             value: month,
                             child: Row(
                               children: [
-                                const Text('📆', style: TextStyle(fontSize: 14)),
+                                Text('📆', style: TextStyle(fontSize: 14)),
                                 const SizedBox(width: 8),
                                 Text(_formatMonth(month)),
                               ],
@@ -400,6 +391,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         setState(() {
                           _filterMonth = value;
                         });
+                        _loadEntries();
                       },
                     ),
                   ),
@@ -445,8 +437,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                                 trailing: Text(
-                                  NumberFormat.currency(symbol: '₹', locale: 'en_IN')
-                                      .format(entry.amount),
+                                  NumberFormat.currency(
+                                    symbol: '₹',
+                                    locale: 'en_IN',
+                                  ).format(entry.amount),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -457,7 +451,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          EntryFormScreen(entry: entry),
+                                          EntryFormScreen(
+                                        pbService: widget.pbService,
+                                        entry: entry,
+                                      ),
                                     ),
                                   );
                                   if (result == true) {
@@ -477,7 +474,8 @@ class _HomeScreenState extends State<HomeScreen> {
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const EntryFormScreen(),
+              builder: (context) =>
+                  EntryFormScreen(pbService: widget.pbService),
             ),
           );
           if (result == true) {

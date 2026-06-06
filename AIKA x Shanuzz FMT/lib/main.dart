@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'services/pocketbase_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
-import 'services/storage_service.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final pbService = PocketBaseService();
+  await pbService.initialize();
+  runApp(MyApp(pbService: pbService));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final PocketBaseService pbService;
+
+  const MyApp({super.key, required this.pbService});
 
   @override
   Widget build(BuildContext context) {
@@ -41,22 +46,22 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: SplashScreen(pbService: pbService),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final PocketBaseService pbService;
+
+  const SplashScreen({super.key, required this.pbService});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  final StorageService _storageService = StorageService();
-
   @override
   void initState() {
     super.initState();
@@ -64,18 +69,22 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkLoginStatus() async {
+    // Brief delay so the splash screen shows
     await Future.delayed(const Duration(seconds: 1));
-    final isLoggedIn = await _storageService.isLoggedIn();
-    
+
     if (!mounted) return;
-    
-    if (isLoggedIn) {
+
+    if (widget.pbService.isLoggedIn) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(pbService: widget.pbService),
+        ),
       );
     } else {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(
+          builder: (context) => LoginScreen(pbService: widget.pbService),
+        ),
       );
     }
   }

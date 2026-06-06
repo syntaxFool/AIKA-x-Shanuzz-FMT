@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:pocketbase/pocketbase.dart';
 import '../models/user.dart';
-import '../services/api_service.dart';
+import '../services/pocketbase_service.dart';
 
 class UserManagementScreen extends StatefulWidget {
-  const UserManagementScreen({super.key});
+  final PocketBaseService pbService;
+
+  const UserManagementScreen({super.key, required this.pbService});
 
   @override
   State<UserManagementScreen> createState() => _UserManagementScreenState();
 }
 
 class _UserManagementScreenState extends State<UserManagementScreen> {
-  final ApiService _apiService = ApiService();
   List<User> _users = [];
   bool _isLoading = false;
 
@@ -21,14 +23,13 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   }
 
   Future<void> _loadUsers() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final users = await _apiService.getUsers();
+      final records = await widget.pbService.getUsers();
+      if (!mounted) return;
       setState(() {
-        _users = users;
+        _users = records.map((r) => User.fromRecord(r)).toList();
       });
     } catch (e) {
       if (mounted) {
@@ -40,17 +41,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         );
       }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _showUserDialog([User? user]) async {
     final formKey = GlobalKey<FormState>();
-    final reffidController = TextEditingController(text: user?.reffid ?? 'USER${DateTime.now().millisecondsSinceEpoch}');
     final nameController = TextEditingController(text: user?.name ?? '');
-    final tokenController = TextEditingController(text: user?.token ?? '');
+    final emailController = TextEditingController(text: user?.email ?? '');
+    final reffidController = TextEditingController(
+      text: user?.reffid ?? 'USER${DateTime.now().millisecondsSinceEpoch}',
+    );
+    final passwordController = TextEditingController();
 
     final result = await showDialog<bool>(
       context: context,
@@ -86,18 +88,42 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: tokenController,
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    labelText: 'Token',
+                    labelText: 'Email',
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter token';
+                      return 'Please enter email';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Please enter a valid email';
                     }
                     return null;
                   },
                 ),
+                if (user == null) ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter password';
+                      }
+                      if (value.length < 6) {
+                        return 'At least 6 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ],
             ),
           ),
@@ -109,22 +135,46 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           ),
           TextButton(
             onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final newUser = User(
-                  reffid: reffidController.text,
-                  name: nameController.text,
-                  token: tokenController.text,
-                );
+              if (!formKey.currentState!.validate()) return;
 
+              try {
                 bool success;
                 if (user == null) {
-                  success = await _apiService.addUser(newUser);
+                  // Create new PocketBase auth user
+                  await widget.pbService.createUser({
+                    'email': emailController.text.trim(),
+                    'password': passwordController.text,
+                    'passwordConfirm': passwordController.text,
+                    'name': nameController.text.trim(),
+                    'reffid': reffidController.text.trim(),
+                  });
+                  success = true;
                 } else {
-                  success = await _apiService.updateUser(user.reffid, newUser);
+                  // Update existing user
+                  final body = <String, dynamic>{
+                    'name': nameController.text.trim(),
+                    'reffid': reffidController.text.trim(),
+                    'email': emailController.text.trim(),
+                  };
+                  if (user.pbId != null) {
+                    await widget.pbService.updateUser(user.pbId!, body);
+                    success = true;
+                  } else {
+                    success = false;
+                  }
                 }
 
                 if (context.mounted) {
                   Navigator.of(context).pop(success);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                 }
               }
             },
@@ -139,7 +189,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(user == null ? 'User added successfully' : 'User updated successfully'),
+            content: Text(
+                user == null ? 'User added successfully' : 'User updated successfully'),
             backgroundColor: Colors.green,
           ),
         );
@@ -168,11 +219,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
     if (confirmed != true) return;
 
-    final success = await _apiService.deleteUser(user.reffid);
-
-    if (!mounted) return;
-
-    if (success) {
+    try {
+      if (user.pbId != null) {
+        await widget.pbService.deleteUser(user.pbId!);
+      }
+      if (!mounted) return;
       _loadUsers();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -180,10 +231,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           backgroundColor: Colors.green,
         ),
       );
-    } else {
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to delete user'),
+        SnackBar(
+          content: Text('Failed to delete user: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -222,7 +274,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         ),
                         child: ListTile(
                           leading: CircleAvatar(
-                            child: Text(user.name.substring(0, 1).toUpperCase()),
+                            child: Text(
+                                user.name.substring(0, 1).toUpperCase()),
                           ),
                           title: Text(user.name),
                           subtitle: Column(
@@ -230,7 +283,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             children: [
                               Text('ID: ${user.reffid}'),
                               Text(
-                                'Token: ${user.token}',
+                                user.email,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -242,12 +295,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                icon: const Icon(Icons.edit,
+                                    color: Colors.blue),
                                 onPressed: () => _showUserDialog(user),
                                 tooltip: 'Edit',
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon: const Icon(Icons.delete,
+                                    color: Colors.red),
                                 onPressed: () => _deleteUser(user),
                                 tooltip: 'Delete',
                               ),

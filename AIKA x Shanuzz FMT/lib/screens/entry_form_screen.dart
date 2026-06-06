@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:pocketbase/pocketbase.dart';
 import '../models/raw_table_entry.dart';
-import '../services/api_service.dart';
-import '../services/storage_service.dart';
+import '../services/pocketbase_service.dart';
 
 class EntryFormScreen extends StatefulWidget {
+  final PocketBaseService pbService;
   final RawTableEntry? entry;
 
-  const EntryFormScreen({super.key, this.entry});
+  const EntryFormScreen({super.key, required this.pbService, this.entry});
 
   @override
   State<EntryFormScreen> createState() => _EntryFormScreenState();
@@ -15,17 +16,13 @@ class EntryFormScreen extends StatefulWidget {
 
 class _EntryFormScreenState extends State<EntryFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final ApiService _apiService = ApiService();
-  final StorageService _storageService = StorageService();
-  
-  late TextEditingController _reffidController;
+
   late TextEditingController _dateController;
-  late TextEditingController _monthController;
   late TextEditingController _amountController;
   late TextEditingController _modeOfPaymentController;
   late TextEditingController _rowDescController;
   late TextEditingController _rowNoteController;
-  
+
   bool _isLoading = false;
   DateTime _selectedDate = DateTime.now();
   List<String> _descriptionSuggestions = [];
@@ -33,42 +30,41 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
   @override
   void initState() {
     super.initState();
-    _reffidController = TextEditingController(text: widget.entry?.reffid ?? _generateReffid());
-    _dateController = TextEditingController(text: widget.entry?.date ?? DateFormat('yyyy-MM-dd').format(DateTime.now()));
-    _monthController = TextEditingController(text: widget.entry?.month ?? DateFormat('MMMM yyyy').format(DateTime.now()));
-    _amountController = TextEditingController(text: widget.entry?.amount.toString() ?? '');
-    _modeOfPaymentController = TextEditingController(text: widget.entry?.modeOfPayment ?? '');
-    _rowDescController = TextEditingController(text: widget.entry?.rowDesc ?? '');
-    _rowNoteController = TextEditingController(text: widget.entry?.rowNote ?? '');
+    _dateController = TextEditingController(
+      text: widget.entry?.date ?? DateFormat('yyyy-MM-dd').format(DateTime.now()),
+    );
+    _amountController = TextEditingController(
+      text: widget.entry?.amount.toString() ?? '',
+    );
+    _modeOfPaymentController = TextEditingController(
+      text: widget.entry?.modeOfPayment ?? '',
+    );
+    _rowDescController = TextEditingController(
+      text: widget.entry?.rowDesc ?? '',
+    );
+    _rowNoteController = TextEditingController(
+      text: widget.entry?.rowNote ?? '',
+    );
     _loadDescriptionSuggestions();
   }
 
   Future<void> _loadDescriptionSuggestions() async {
     try {
-      final entries = await _apiService.getRawTableEntries();
-      final descriptions = entries
-          .map((e) => e.rowDesc)
+      final records = await widget.pbService.getEntries();
+      final descriptions = records
+          .map((r) => r.getStringValue('rowDesc'))
           .where((desc) => desc.isNotEmpty)
           .toSet()
           .toList();
-      setState(() {
-        _descriptionSuggestions = descriptions;
-      });
+      setState(() => _descriptionSuggestions = descriptions);
     } catch (e) {
-      // Silently fail - suggestions are optional
-      print('Failed to load description suggestions: $e');
+      // Silently fail — suggestions are optional
     }
-  }
-
-  String _generateReffid() {
-    return 'REF${DateTime.now().millisecondsSinceEpoch}';
   }
 
   @override
   void dispose() {
-    _reffidController.dispose();
     _dateController.dispose();
-    _monthController.dispose();
     _amountController.dispose();
     _modeOfPaymentController.dispose();
     _rowDescController.dispose();
@@ -83,66 +79,67 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    
+
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
         _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
-        _monthController.text = DateFormat('MMMM yyyy').format(picked);
       });
     }
+  }
+
+  String _generateReffid() {
+    // Re-use the same reffid if editing
+    if (widget.entry != null) return widget.entry!.reffid;
+    return 'REF${DateTime.now().millisecondsSinceEpoch}';
   }
 
   Future<void> _saveEntry() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final userName = await _storageService.getUserName() ?? 'Unknown';
+      final userName = widget.pbService.userName ?? 'Unknown';
       final timestamp = DateTime.now().toIso8601String();
+      final isEditing = widget.entry != null;
 
-      final entry = RawTableEntry(
-        reffid: _reffidController.text,
-        date: _dateController.text,
-        month: _monthController.text,
-        amount: double.parse(_amountController.text),
-        modeOfPayment: _modeOfPaymentController.text,
-        rowDesc: _rowDescController.text,
-        rowNote: _rowNoteController.text,
-        entryTimestamp: widget.entry?.entryTimestamp ?? timestamp,
-        entryUser: widget.entry?.entryUser ?? userName,
-        editTimestamp: timestamp,
-        editUser: userName,
-      );
+      final body = {
+        'reffid': _generateReffid(),
+        'date': _dateController.text,
+        'month': DateFormat('MMMM yyyy').format(_selectedDate),
+        'amount': double.parse(_amountController.text),
+        'modeOfPayment': _modeOfPaymentController.text,
+        'rowDesc': _rowDescController.text,
+        'rowNote': _rowNoteController.text,
+        'entryTimestamp': widget.entry?.entryTimestamp ?? timestamp,
+        'entryUser': widget.entry?.entryUser ?? userName,
+        'editTimestamp': timestamp,
+        'editUser': userName,
+      };
 
-      bool success;
-      if (widget.entry == null) {
-        success = await _apiService.addRawTableEntry(entry);
+      if (isEditing && widget.entry!.pbId != null) {
+        await widget.pbService.updateEntry(widget.entry!.pbId!, body);
       } else {
-        success = await _apiService.updateRawTableEntry(widget.entry!.reffid, entry);
+        await widget.pbService.createEntry(body);
       }
 
       if (!mounted) return;
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.entry == null ? 'Entry added successfully' : 'Entry updated successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop(true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save entry'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isEditing ? 'Entry updated successfully' : 'Entry added successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } on ClientException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.response['message'] ?? 'Failed to save'}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -152,16 +149,12 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _deleteEntry() async {
-    if (widget.entry == null) return;
+    if (widget.entry == null || widget.entry!.pbId == null) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -183,31 +176,27 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
 
     if (confirmed != true) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final success = await _apiService.deleteRawTableEntry(widget.entry!.reffid);
+      await widget.pbService.deleteEntry(widget.entry!.pbId!);
 
       if (!mounted) return;
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Entry deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop(true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete entry'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Entry deleted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.of(context).pop(true);
+    } on ClientException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.response['message'] ?? 'Failed to delete'}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -217,11 +206,7 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -273,7 +258,8 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                   border: OutlineInputBorder(),
                   prefixText: '₹ ',
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter amount';
@@ -286,17 +272,25 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _modeOfPaymentController.text.isEmpty ? null : _modeOfPaymentController.text,
+                value: _modeOfPaymentController.text.isEmpty
+                    ? null
+                    : _modeOfPaymentController.text,
                 decoration: const InputDecoration(
                   labelText: 'Mode of Payment',
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'Cash', child: Text('Cash')),
-                  DropdownMenuItem(value: 'Card', child: Text('Card')),
-                  DropdownMenuItem(value: 'UPI', child: Text('UPI')),
-                  DropdownMenuItem(value: 'Bank Transfer', child: Text('Bank Transfer')),
-                  DropdownMenuItem(value: 'Other', child: Text('Other')),
+                  DropdownMenuItem(
+                      value: 'Cash', child: Text('Cash')),
+                  DropdownMenuItem(
+                      value: 'Card', child: Text('Card')),
+                  DropdownMenuItem(
+                      value: 'UPI', child: Text('UPI')),
+                  DropdownMenuItem(
+                      value: 'Bank Transfer',
+                      child: Text('Bank Transfer')),
+                  DropdownMenuItem(
+                      value: 'Other', child: Text('Other')),
                 ],
                 onChanged: (value) {
                   if (value != null) {
@@ -312,13 +306,17 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
               ),
               const SizedBox(height: 16),
               Autocomplete<String>(
-                initialValue: TextEditingValue(text: _rowDescController.text),
-                optionsBuilder: (TextEditingValue textEditingValue) {
+                initialValue:
+                    TextEditingValue(text: _rowDescController.text),
+                optionsBuilder:
+                    (TextEditingValue textEditingValue) {
                   if (textEditingValue.text.isEmpty) {
                     return const Iterable<String>.empty();
                   }
-                  return _descriptionSuggestions.where((String option) {
-                    return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                  return _descriptionSuggestions.where(
+                      (String option) {
+                    return option.toLowerCase().contains(
+                        textEditingValue.text.toLowerCase());
                   });
                 },
                 onSelected: (String selection) {
