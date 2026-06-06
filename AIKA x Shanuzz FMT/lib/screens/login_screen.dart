@@ -104,6 +104,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 40),
                 TextFormField(
                   controller: _accessKeyController,
+                  autofillHints: const [],
+                  enableSuggestions: false,
                   decoration: const InputDecoration(
                     labelText: 'Access Key',
                     hintText: 'Enter your access key',
