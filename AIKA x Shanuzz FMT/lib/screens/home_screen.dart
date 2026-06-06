@@ -17,6 +17,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final CsvService _csvService = CsvService();
+
   List<RawTableEntry> _entries = [];
   bool _isLoading = false;
   String _userName = '';
@@ -60,6 +62,104 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => LoginScreen(pbService: widget.pbService),
       ),
     );
+  }
+
+  Future<void> _exportCsv() async {
+    try {
+      final csv = _csvService.entriesToCsv(_entries);
+      final dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      _csvService.downloadCsv(csv, 'fmt-export-$dateStr.csv');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('CSV exported successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _importCsv() async {
+    try {
+      final entries = await _csvService.pickAndParseCsv();
+      if (entries == null || entries.isEmpty || !mounted) return;
+
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Import CSV'),
+          content: Text(
+            'Found ${entries.length} entries. Import them now?\n\n'
+            'Duplicates will be added as new entries.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Import'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true || !mounted) return;
+
+      var successCount = 0;
+      var failCount = 0;
+      final userName = widget.pbService.userName ?? 'Import';
+      final timestamp = DateTime.now().toIso8601String();
+
+      for (final entry in entries) {
+        try {
+          await widget.pbService.createEntry({
+            ...entry.toRecordBody(),
+            'entryUser': userName,
+            'entryTimestamp': timestamp,
+            'editUser': userName,
+            'editTimestamp': timestamp,
+          });
+          successCount++;
+        } catch (_) {
+          failCount++;
+        }
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Imported $successCount entries' +
+                (failCount > 0 ? ' ($failCount failed)' : ''),
+          ),
+          backgroundColor:
+              failCount > 0 ? Colors.orange : Colors.green,
+        ),
+      );
+
+      _loadEntries();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Import failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   List<RawTableEntry> get _filteredEntries {
@@ -143,6 +243,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 case 'logout':
                   _logout();
                   break;
+                case 'export_csv':
+                  _exportCsv();
+                  break;
+                case 'import_csv':
+                  _importCsv();
+                  break;
               }
             },
             itemBuilder: (context) => [
@@ -194,6 +300,41 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(width: 12),
                     Text(
                       'Logout',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'export_csv',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.file_download,
+                      size: 20,
+                      color: Colors.blue[700],
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Export CSV',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'import_csv',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.file_upload,
+                      size: 20,
+                      color: Colors.blue[700],
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Import CSV',
                       style: TextStyle(fontSize: 15),
                     ),
                   ],
