@@ -97,9 +97,9 @@ class PocketBaseService {
     if (month != null && month.isNotEmpty) {
       return await _pb
           .collection('entries')
-          .getFullList(sort: '-created', filter: 'month = "$month"');
+          .getFullList(sort: '-date', filter: 'month = "$month"');
     }
-    return await _pb.collection('entries').getFullList(sort: '-created');
+    return await _pb.collection('entries').getFullList(sort: '-date');
   }
 
   /// Create a new entry and return its [RecordModel].
