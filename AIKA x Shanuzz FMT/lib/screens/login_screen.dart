@@ -13,15 +13,17 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  static const String _emailDomain = '@fmt.aika-shuz.fyi';
+
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _accessKeyController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _accessKeyController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -32,8 +34,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Build full email from access key
+      final email =
+          '${_accessKeyController.text.trim()}$_emailDomain';
+
       await widget.pbService.login(
-        _emailController.text.trim(),
+        email,
         _passwordController.text,
       );
 
@@ -102,20 +108,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
                 TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
+                  controller: _accessKeyController,
                   decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter your email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                    labelText: 'Access Key',
+                    hintText: 'Enter your access key',
+                    prefixIcon: Icon(Icons.key),
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
+                      return 'Please enter your access key';
                     }
                     return null;
                   },
