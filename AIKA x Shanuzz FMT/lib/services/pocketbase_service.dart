@@ -10,8 +10,8 @@ class PocketBaseService {
   late final PocketBase _pb;
   bool _initialized = false;
 
-  /// Production PocketBase URL (same domain, routed via Traefik).
-  static const String _productionUrl = 'https://fmt.aika-shuz.fyi';
+  /// Production PocketBase URL (relative — same origin as the app).
+  static const String _productionUrl = '';
 
   /// Local development PocketBase URL.
   static const String _devUrl = 'http://127.0.0.1:8090';
