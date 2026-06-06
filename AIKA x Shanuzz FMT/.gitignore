@@ -55,3 +55,8 @@ local.properties
 *.env
 noc/pocketbase
 noc/pb_data/
+noc/pb_migrations/
+noc/CHANGELOG.md
+noc/LICENSE.md
+.pi/
+user-creds.md
