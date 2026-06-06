@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:html' as html;
+import 'package:url_launcher/url_launcher.dart';
 import '../models/raw_table_entry.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
@@ -143,13 +143,13 @@ class _HomeScreenState extends State<HomeScreen> {
             onSelected: (value) {
               switch (value) {
                 case 'sheet':
-                  html.window.open(
-                    'https://docs.google.com/spreadsheets/d/1e2Zt5EsUvdAXzlHigNwsT8EmytJXV7mXwuP1vY-378Q/edit?usp=sharing',
-                    '_blank',
+                  launchUrl(
+                    Uri.parse('https://docs.google.com/spreadsheets/d/1e2Zt5EsUvdAXzlHigNwsT8EmytJXV7mXwuP1vY-378Q/edit?usp=sharing'),
+                    webOnlyWindowName: '_blank',
                   );
                   break;
                 case 'refresh':
-                  html.window.location.reload();
+                  launchUrl(Uri.base, webOnlyWindowName: '_self');
                   break;
                 case 'logout':
                   _logout();

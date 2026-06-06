@@ -50,7 +50,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     final formKey = GlobalKey<FormState>();
     final reffidController = TextEditingController(text: user?.reffid ?? 'USER${DateTime.now().millisecondsSinceEpoch}');
     final nameController = TextEditingController(text: user?.name ?? '');
-    final tokenController = TextEditingController(text: user?.token ?? _generateToken());
+    final tokenController = TextEditingController(text: user?.token ?? '');
 
     final result = await showDialog<bool>(
       context: context,
@@ -145,11 +145,6 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         );
       }
     }
-  }
-
-  String _generateToken() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    return List.generate(16, (index) => chars[DateTime.now().millisecondsSinceEpoch % chars.length]).join();
   }
 
   Future<void> _deleteUser(User user) async {

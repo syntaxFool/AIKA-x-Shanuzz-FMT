@@ -6,15 +6,30 @@ const SPREADSHEET_ID = '1e2Zt5EsUvdAXzlHigNwsT8EmytJXV7mXwuP1vY-378Q';
 const RAW_TABLE_SHEET_NAME = 'rawtable';
 const USER_SHEET_NAME = 'user';
 
+// Verify a token is valid
+function verifyToken(token) {
+  if (!token) return false;
+  const sheet = getSpreadsheet().getSheetByName(USER_SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+  const tokenIndex = data[0].indexOf('Token');
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][tokenIndex] === token) return true;
+  }
+  return false;
+}
+
 // Main entry point for GET requests
 function doGet(e) {
   try {
     const action = e.parameter.action;
+    const token = e.parameter.token || '';
     
     switch(action) {
       case 'getRawTable':
+        if (!verifyToken(token)) return createResponse(false, 'Unauthorized: Invalid token');
         return getRawTableEntries();
       case 'getUsers':
+        if (!verifyToken(token)) return createResponse(false, 'Unauthorized: Invalid token');
         return getUsers();
       case 'getUserByToken':
         return getUserByToken(e.parameter.token);
@@ -31,19 +46,26 @@ function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
     const action = data.action;
+    const token = data.token || '';
     
     switch(action) {
       case 'addRawTable':
+        if (!verifyToken(token)) return createResponse(false, 'Unauthorized: Invalid token');
         return addRawTableEntry(data.data);
       case 'updateRawTable':
+        if (!verifyToken(token)) return createResponse(false, 'Unauthorized: Invalid token');
         return updateRawTableEntry(data.reffid, data.data);
       case 'deleteRawTable':
+        if (!verifyToken(token)) return createResponse(false, 'Unauthorized: Invalid token');
         return deleteRawTableEntry(data.reffid);
       case 'addUser':
+        if (!verifyToken(token)) return createResponse(false, 'Unauthorized: Invalid token');
         return addUser(data.data);
       case 'updateUser':
+        if (!verifyToken(token)) return createResponse(false, 'Unauthorized: Invalid token');
         return updateUser(data.reffid, data.data);
       case 'deleteUser':
+        if (!verifyToken(token)) return createResponse(false, 'Unauthorized: Invalid token');
         return deleteUser(data.reffid);
       default:
         return createResponse(false, 'Invalid action');
