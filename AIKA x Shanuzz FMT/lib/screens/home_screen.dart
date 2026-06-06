@@ -25,6 +25,19 @@ class _HomeScreenState extends State<HomeScreen> {
   String _userName = '';
   String? _filterMonth;
 
+  // Search & Filters
+  final _searchController = TextEditingController();
+  String _searchText = '';
+  DateTime? _dateFrom;
+  DateTime? _dateTo;
+  double? _amountMin;
+  double? _amountMax;
+  bool _showFilters = false;
+
+  // Sorting
+  String? _sortField;
+  bool _sortAscending = true;
+
   @override
   void initState() {
     super.initState();
